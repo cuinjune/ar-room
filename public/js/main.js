@@ -43,19 +43,9 @@ class Scene {
 		document.body.appendChild(ARButton.createButton(this.renderer));
 
 		// controller
-		const geometry = new THREE.CylinderBufferGeometry(0, 0.05, 0.2, 32).rotateX(Math.PI / 2);
-
-		function onSelect() {
-			const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
-			const mesh = new THREE.Mesh(geometry, material);
-			mesh.position.set(0, 0, - 0.3).applyMatrix4(controller.matrixWorld);
-			mesh.quaternion.setFromRotationMatrix(controller.matrixWorld);
-			console.log(this.scene);
-			this.scene.add(mesh);
-		}
-		const controller = this.renderer.xr.getController(0);
-		controller.addEventListener('select', onSelect);
-		this.scene.add(controller);
+		this.controller = this.renderer.xr.getController(0);
+		this.controller.addEventListener('select', () => this.onSelect());
+		this.scene.add(this.controller);
 
 		// event listeners
 		window.addEventListener("resize", () => {
@@ -68,8 +58,6 @@ class Scene {
 
 		// add player
 		// this.addSelf();
-
-		
 
 		// start the loop
 		this.renderer.setAnimationLoop((time) => this.update(time));
@@ -120,17 +108,27 @@ class Scene {
 			}
 		}
 	}
-
-	//////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////
-	// Interaction
-
+	
 	// data to send to the server
 	getPlayerMove() {
 		return [
 			[this.player.position.x, this.player.position.y, this.player.position.z],
 			[this.player.quaternion.x, this.player.quaternion.y, this.player.quaternion.z, this.player.quaternion.w]
 		];
+	}
+
+	//////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////
+	// Interaction
+
+	// called when xr controller is selected
+	onSelect() {
+		const geometry = new THREE.CylinderBufferGeometry(0, 0.05, 0.2, 32).rotateX(Math.PI / 2);
+		const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
+		const mesh = new THREE.Mesh(geometry, material);
+		mesh.position.set(0, 0, - 0.3).applyMatrix4(this.controller.matrixWorld);
+		mesh.quaternion.setFromRotationMatrix(this.controller.matrixWorld);
+		this.scene.add(mesh);
 	}
 
 	//////////////////////////////////////////////////////////////////////

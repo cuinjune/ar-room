@@ -1,3 +1,32 @@
+/*
+const path = require('path');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// handle data in a nice way
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// static path
+const publicPath = path.resolve(`${__dirname}/public`);
+const socketioPath = path.resolve(`${__dirname}/node_modules/socket.io-client/dist`);
+
+// set your static server
+app.use(express.static(publicPath));
+app.use(express.static(socketioPath));
+
+// views
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'views/index.html'));
+});
+
+// start listening
+const server = app.listen(PORT);
+console.log('Server is running localhost on port: ' + PORT);
+*/
+
 const fs = require('fs');
 const path = require('path');
 const express = require('express');

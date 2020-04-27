@@ -29,7 +29,9 @@ const cert = fs.readFileSync(`${__dirname}/cert.pem`);
 const server = https.createServer({key: key, cert: cert }, app);
 
 // start listening
-server.listen(PORT, () => { console.log(`Server is running localhost on port: ${PORT}`) });
+server.listen(PORT, () => { 
+  console.log(`Server is running localhost on port: ${PORT}`) 
+});
 
 // socket.io
 const io = require('socket.io')({

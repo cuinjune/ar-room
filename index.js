@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-const http = require('http').createServer(app);
+const https = require('https');
 const PORT = process.env.PORT || 3000;
 
 // handle data in a nice way
@@ -23,9 +23,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views/index.html'));
 });
 
+// create https server
+const key = fs.readFileSync(`${__dirname}/key.pem`);
+const cert = fs.readFileSync(`${__dirname}/cert.pem`);
+const server = https.createServer({key: key, cert: cert }, app);
+
 // start listening
-const server = app.listen(PORT);
-console.log('Server is running localhost on port: ' + PORT);
+server.listen(PORT, () => { console.log(`Server is running localhost on port: ${PORT}`) });
 
 // socket.io
 const io = require('socket.io')({

@@ -8,8 +8,8 @@ import { ARButton } from 'https://threejs.org/examples/jsm/webxr/ARButton.js';
 class Scene {
 	constructor(_width, _height, _socket) {
 
-		this.container = document.createElement('div');
-		document.body.appendChild(this.container);
+		const container = document.createElement('div');
+		document.body.appendChild(container);
 
 		// socket to communicate with the server
 		this.socket = _socket;
@@ -37,7 +37,7 @@ class Scene {
 		this.renderer.xr.enabled = true;
 
 		// push the canvas to the DOM
-		this.container.appendChild(this.renderer.domElement);
+		container.appendChild(this.renderer.domElement);
 
 		// AR button
 		document.body.appendChild(ARButton.createButton(this.renderer));
@@ -52,9 +52,9 @@ class Scene {
 			mesh.quaternion.setFromRotationMatrix(controller.matrixWorld);
 			this.scene.add(mesh);
 		}
-		this.controller = this.renderer.xr.getController(0);
-		this.controller.addEventListener('select', onSelect);
-		this.scene.add(this.controller);
+		const controller = this.renderer.xr.getController(0);
+		controller.addEventListener('select', onSelect);
+		this.scene.add(controller);
 
 		// event listeners
 		window.addEventListener("resize", () => {

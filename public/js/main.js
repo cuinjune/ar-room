@@ -1,4 +1,21 @@
 ////////////////////////////////////////////////////////////////////////////////
+// global variables
+////////////////////////////////////////////////////////////////////////////////
+
+// detect mobile device or not
+const isMobile = (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+
+// socket.io
+let socket;
+let id; //my socket id
+
+// array of connected clients
+let clients = {};
+
+// variable to store our three.js scene:
+let glScene;
+
+////////////////////////////////////////////////////////////////////////////////
 // three.js scene
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,30 +51,30 @@ class Scene {
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(this.width, this.height);
-		this.renderer.xr.enabled = true;
+		if (isMobile) {
+			this.renderer.xr.enabled = true;
+		}
 
 		// push the canvas to the DOM
 		container.appendChild(this.renderer.domElement);
 
 		// AR button
-		document.body.appendChild(ARButton.createButton(this.renderer));
+		if (isMobile) {
+			document.body.appendChild(ARButton.createButton(this.renderer));
+		}
+
+		// window resize listener
+		window.addEventListener("resize", () => this.windowResized());
 
 		// controller
-		this.controller = this.renderer.xr.getController(0);
-		this.controller.addEventListener('select', () => this.onSelect());
-		this.scene.add(this.controller);
-
-		// event listeners
-		window.addEventListener("resize", () => {
-			this.width = window.innerWidth;
-			this.height = window.innerHeight;
-			this.renderer.setSize(this.width, this.height);
-			this.camera.aspect = this.width / this.height;
-			this.camera.updateProjectionMatrix();
-		});
+		if (isMobile) {
+			this.controller = this.renderer.xr.getController(0);
+			this.controller.addEventListener('select', () => this.onSelect());
+			this.scene.add(this.controller);
+		}
 
 		// add player
-		// this.addSelf();
+		this.addSelf();
 
 		// start the loop
 		this.renderer.setAnimationLoop((time) => this.update(time));
@@ -68,38 +85,39 @@ class Scene {
 	// Clients
 
 	addSelf() {
-		// // color
-		// const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x9797CE });
+		// color
+		const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x9797CE });
 
-		// // player
-		// const player = new THREE.Mesh(new THREE.CubeGeometry(1, 1, 1), playerMaterial);
+		// player
+		this.player = new THREE.Mesh(new THREE.CubeGeometry(0.1, 0.1, 0.1), playerMaterial);
 
-		// // add player to scene
-		// this.scene.add(player);
+		// add player to the scene
+		this.scene.add(this.player);
 	}
 
 	addClient(_clientProp, _id) {
-		// // color
-		// const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x9797CE });
 
-		// // player
-		// const player = new THREE.Mesh(new THREE.CubeGeometry(1, 1, 1), playerMaterial);
+		// color
+		const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x9797CE });
 
-		// // add player to scene
-		// this.scene.add(player);
+		// player
+		clients[_id].player = new THREE.Mesh(new THREE.CubeGeometry(0.04, 0.08, 0.01), playerMaterial);
 
-		// // assign to client
-		// clients[_id].player = player;
+		// add player to scene
+		this.scene.add(clients[_id].player);
 	}
 
 	removeClient(_id) {
-		// // remove player from scene
-		// this.scene.remove(clients[_id].player);
+
+		// remove player from scene
+		if (clients[_id]) {
+			this.scene.remove(clients[_id].player);
+		}
 	}
 
 	updateClientMoves(_clientProps) {
 		for (let _id in _clientProps) {
-			if (_id != id) {
+			if (_id != id && clients[_id]) {
 				const lerpAmount = 0.2;
 				const playerPosition = new THREE.Vector3().fromArray(_clientProps[_id].position);
 				const playerQuaternion = new THREE.Quaternion().fromArray(_clientProps[_id].quaternion);
@@ -108,7 +126,7 @@ class Scene {
 			}
 		}
 	}
-	
+
 	// data to send to the server
 	getPlayerMove() {
 		return [
@@ -121,42 +139,48 @@ class Scene {
 	//////////////////////////////////////////////////////////////////////
 	// Interaction
 
+	// called when window is resized
+	windowResized() {
+		this.width = window.innerWidth;
+		this.height = window.innerHeight;
+		this.renderer.setSize(this.width, this.height);
+		this.camera.aspect = this.width / this.height;
+		this.camera.updateProjectionMatrix();
+	}
+
 	// called when xr controller is selected
 	onSelect() {
-		const geometry = new THREE.CylinderBufferGeometry(0, 0.05, 0.2, 32).rotateX(Math.PI / 2);
-		const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
-		const mesh = new THREE.Mesh(geometry, material);
-		mesh.position.set(0, 0, - 0.3).applyMatrix4(this.controller.matrixWorld);
-		mesh.quaternion.setFromRotationMatrix(this.controller.matrixWorld);
-		this.scene.add(mesh);
+		// const geometry = new THREE.CylinderBufferGeometry(0, 0.05, 0.2, 32).rotateX(Math.PI / 2);
+		// const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
+		// const mesh = new THREE.Mesh(geometry, material);
+		// mesh.position.set(0, 0, -0.3).applyMatrix4(this.controller.matrixWorld);
+		// mesh.quaternion.setFromRotationMatrix(this.controller.matrixWorld);
+		// this.scene.add(mesh);
 	}
 
 	//////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////
 	// Rendering
 	update(time) {
+
+		if (isMobile) {
+			var position = new THREE.Vector3();
+			var quaternion = new THREE.Quaternion();
+			var scale = new THREE.Vector3();
+			this.camera.matrixWorld.decompose(position, quaternion, scale);
+			this.player.position.copy(position);
+			this.player.quaternion.copy(quaternion);
+			// this.player.scale.copy(scale);
+		}
+
 		// send movement to server to update clients data (calls back updateClientMoves)
-		//this.socket.emit('move', this.getPlayerMove());
+		this.socket.emit('move', this.getPlayerMove());
 
 		// render
 		this.renderer.render(this.scene, this.camera);
 	}
-	
+
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// global variables
-////////////////////////////////////////////////////////////////////////////////
-
-// socket.io
-let socket;
-let id; //my socket id
-
-// array of connected clients
-let clients = {};
-
-// variable to store our three.js scene:
-let glScene;
 
 ////////////////////////////////////////////////////////////////////////////////
 // socket.io
@@ -230,7 +254,7 @@ function initSocketConnection() {
 function createScene() {
 	// initialize three.js scene
 	console.log("Creating three.js scene...");
-	glScene = new Scene( window.innerWidth,window.innerHeight,socket);
+	glScene = new Scene(window.innerWidth, window.innerHeight, socket);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

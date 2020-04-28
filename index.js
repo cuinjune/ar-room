@@ -85,6 +85,9 @@ io.on('connection', client => {
   // make sure to send clients, his ID, and a list of all keys
   client.emit('introduction', clients, client.id, Object.keys(clients));
 
+  // send to all existing clients when a new user is connected
+  io.sockets.emit('newUserConnected', clients[client.id], io.engine.clientsCount, client.id);
+
   client.on('move', (data) => {
     if (clients[client.id]) {
       clients[client.id].position = data[0];

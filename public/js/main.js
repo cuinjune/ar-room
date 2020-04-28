@@ -96,7 +96,6 @@ class Scene {
 	}
 
 	addClient(_clientProp, _id) {
-
 		// color
 		const playerMaterial = new THREE.MeshLambertMaterial({ color: 0x9797CE });
 
@@ -108,7 +107,6 @@ class Scene {
 	}
 
 	removeClient(_id) {
-
 		// remove player from scene
 		if (clients[_id]) {
 			this.scene.remove(clients[_id].player);
@@ -170,7 +168,6 @@ class Scene {
 			this.camera.matrixWorld.decompose(position, quaternion, scale);
 			this.player.position.copy(position);
 			this.player.quaternion.copy(quaternion);
-			// this.player.scale.copy(scale);
 		}
 
 		// send movement to server to update clients data (calls back updateClientMoves)
